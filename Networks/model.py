@@ -6,6 +6,7 @@ import numpy as np
 np.random.seed(2885)
 import os
 import copy
+from rich.progress import Progress
 
 import torch
 torch.manual_seed(2885)
@@ -59,8 +60,7 @@ class Network_Class:
         # NETWORK ARCHITECTURE INITIALISATION
         # -----------------------------------
         # self.model = Net(param).to(self.device)
-        self.model = UNet(param).to(self.device)
-
+        self.model = UNetLight(param).to(self.device)
         # -------------------
         # TRAINING PARAMETERS
         # -------------------
@@ -88,61 +88,86 @@ class Network_Class:
     # TRAINING LOOP (fool implementation)
     # -----------------------------------
     def train(self):
-        for epoch in range(self.epoch):
-            # Training loop
-            self.model.train()  # Set model to training mode
-            train_loss = 0.0
-            for images, GT, resizedImg in self.trainDataLoader:
+
+        losses_train = []
+        losses_val   = []
+    
+        with Progress() as progress:
+            epoch_task = progress.add_task("[cyan]Epoch Progress", total=self.epoch)
+            
+            for epoch in range(self.epoch):
+    
+                batch_task = progress.add_task(f"[green]Training Epoch {epoch + 1}/{self.epoch}", total=len(self.trainDataLoader))
                 
-                images, GT = images.to(self.device), GT.to(self.device)
+                # Training loop
+                self.model.train()  # Set model to training mode
+                train_loss = 0.0
+                for images, GT, resizedImg in self.trainDataLoader:
+                    images, GT = images.to(self.device), GT.to(self.device)
 
-                outputs = self.model(images)
-                loss = self.criterion(outputs, GT)
+                    outputs = self.model(images).squeeze(1)
+                    loss = self.criterion(outputs, GT)
 
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
 
-                train_loss += loss.item()
+                    train_loss += loss.item()
 
-            train_loss /= len(self.trainDataLoader)
+                    # Update the batch progress bar
+                    progress.update(batch_task, advance=1)
+                    break
+    
+                train_loss /= len(self.trainDataLoader)
+                progress.remove_task(batch_task)
 
-            # Validation loop
-            self.model.eval() 
-            val_loss = 0.0
-            correct = 0
-            total = 0
+                # Validation loop
+                self.model.eval()  # Set model to evaluation mode
+                val_loss = 0.0
+   
+                val_batch_task = progress.add_task(f"[blue]Validating Epoch {epoch + 1}/{self.epoch}", total=len(self.valDataLoader))
+                
+                with torch.no_grad():
+                    for images, GT, resizedImg in self.valDataLoader:
+                        images, GT = images.to(self.device), GT.to(self.device)
 
-            with torch.no_grad():
-                for x_val, y_val in self.valDataLoader:
-                    x_val, y_val = x_val.to(self.device), y_val.to(self.device)
+                        outputs = self.model(images).squeeze(1)
+                        loss = self.criterion(outputs, GT)
+                        val_loss += loss.item()
 
-                    outputs = self.model(x_val)
-                    loss = self.criterion(outputs, y_val)
-                    val_loss += loss.item()
+   
+                        progress.update(val_batch_task, advance=1)
+                        break
 
-                    # Calculate accuracy
-                    _, predicted = torch.max(outputs, 1)
-                    total += y_val.size(0)
-                    correct += (predicted == y_val).sum().item()
+                # Calculate average validation loss 
+                val_loss /= len(self.valDataLoader)
+                progress.remove_task(val_batch_task)
 
-            # Calculate average validation loss and accuracy
-            val_loss /= len(self.valDataLoader)
-            accuracy = 100 * correct / total
+    
+                progress.update(epoch_task, advance=1)
 
-            print(f'Epoch {epoch+1}/{self.epoch}, '
-                f'Train Loss: {train_loss:.4f}, '
-                f'Validation Loss: {val_loss:.4f}, '
-                f'Validation Accuracy: {accuracy:.2f}%', end='\r')
+                losses_train.append(train_loss)
+                losses_val.append(val_loss)
+                # Print summary for the epoch
+                print(f'Epoch {epoch+1}/{self.epoch}, '
+                    f'Train Loss: {train_loss:.4f}, '
+                    f'Validation Loss: {val_loss:.4f}')
 
 
-            # Print learning curves
-            # Implement this...
+        fig = plt.figure(dpi=100)
+        plt.plot(losses_train, label='train', color = "blue")
+        plt.plot(losses_val, label='val', color = "green")
+        plt.xlabel("epoch")
+        plt.ylabel("loss")
+        plt.legend(loc = "upper left", shadow = True)
+        plt.savefig(self.resultsPath + '/losses.pdf')
+        plt.show()
 
+    
         # Save the model weights
-        wghtsPath  = self.resultsPath + '/_Weights/'
+        wghtsPath = self.resultsPath + '/_Weights/'
         createFolder(wghtsPath)
-        torch.save(self.model.parameters(), wghtsPath + '/wghts.pkl')
+        torch.save(self.model.state_dict(), wghtsPath + '/wghts.pkl')
 
 
 
@@ -157,7 +182,7 @@ class Network_Class:
         allInputs, allPreds, allGT = [], [], []
         for (images, GT, resizedImg) in self.testDataLoader:
             images      = images.to(self.device)
-            predictions = self.model(images)
+            predictions = (self.model(images) > 0.5).float()
 
             images, predictions = images.to('cpu'), predictions.to('cpu')
 

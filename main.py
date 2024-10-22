@@ -43,19 +43,18 @@ def main(parser):
     # 1. NETWORK INSTANTIATION 
     # ------------------------
     myNetwork  = Network_Class(param, imgDirectory, maskDirectory, resultsPath)
-
     # ------------------------------------------ 
     # 2. VISUALISATION OF THE DATASET (OPTIONAL)
     # ------------------------------------------
     # Comment line below to skip the visualisation
-    showDataLoader(myNetwork.trainDataLoader, param)
+    # showDataLoader(myNetwork.trainDataLoader, param)
 
     # ------------------
     # 3. TRAIN THE MODEL  
     # ------------------
-    print(colored('Start to train the network', 'red'))
-    myNetwork.train()
-    print(colored('The network is trained', 'red'))
+    # print(colored('Start to train the network', 'red'))
+    # myNetwork.train()
+    # print(colored('The network is trained', 'red'))
     
     # ---------------------
     # 4. EVALUATE THE MODEL  
