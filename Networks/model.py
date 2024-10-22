@@ -58,13 +58,14 @@ class Network_Class:
         # -----------------------------------
         # NETWORK ARCHITECTURE INITIALISATION
         # -----------------------------------
-        self.model = Net(param).to(self.device)
+        # self.model = Net(param).to(self.device)
+        self.model = UNet(param).to(self.device)
 
         # -------------------
         # TRAINING PARAMETERS
         # -------------------
-        self.criterion = ...
-        self.optimizer = ... 
+        self.criterion = torch.nn.BCEWithLogitsLoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
 
         # ----------------------------------------------------
         # DATASET INITIALISATION (from the dataLoader.py file)
@@ -86,19 +87,62 @@ class Network_Class:
     # -----------------------------------
     # TRAINING LOOP (fool implementation)
     # -----------------------------------
-    def train(self): 
-        # train for a given number of epochs
-        for i in range(self.epoch):
-            print("Loss at i-th epoch: ", str(np.random.random_sample()))
-            modelWts = copy.deepcopy(self.model.state_dict())
+    def train(self):
+        for epoch in range(self.epoch):
+            # Training loop
+            self.model.train()  # Set model to training mode
+            train_loss = 0.0
+            for images, GT, resizedImg in self.trainDataLoader:
+                
+                images, GT = images.to(self.device), GT.to(self.device)
 
-        # Print learning curves
-        # Implement this...
+                outputs = self.model(images)
+                loss = self.criterion(outputs, GT)
+
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                train_loss += loss.item()
+
+            train_loss /= len(self.trainDataLoader)
+
+            # Validation loop
+            self.model.eval() 
+            val_loss = 0.0
+            correct = 0
+            total = 0
+
+            with torch.no_grad():
+                for x_val, y_val in self.valDataLoader:
+                    x_val, y_val = x_val.to(self.device), y_val.to(self.device)
+
+                    outputs = self.model(x_val)
+                    loss = self.criterion(outputs, y_val)
+                    val_loss += loss.item()
+
+                    # Calculate accuracy
+                    _, predicted = torch.max(outputs, 1)
+                    total += y_val.size(0)
+                    correct += (predicted == y_val).sum().item()
+
+            # Calculate average validation loss and accuracy
+            val_loss /= len(self.valDataLoader)
+            accuracy = 100 * correct / total
+
+            print(f'Epoch {epoch+1}/{self.epoch}, '
+                f'Train Loss: {train_loss:.4f}, '
+                f'Validation Loss: {val_loss:.4f}, '
+                f'Validation Accuracy: {accuracy:.2f}%', end='\r')
+
+
+            # Print learning curves
+            # Implement this...
 
         # Save the model weights
         wghtsPath  = self.resultsPath + '/_Weights/'
         createFolder(wghtsPath)
-        torch.save(modelWts, wghtsPath + '/wghts.pkl')
+        torch.save(self.model.parameters(), wghtsPath + '/wghts.pkl')
 
 
 
