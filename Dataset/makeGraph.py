@@ -60,7 +60,7 @@ def singlePrediction(img, pred, GT, filePath):
     ax[1].set_title("GT")
     ax[1].set_axis_off()
 
-    ax[2].imshow(np.squeeze(pred)*255, interpolation="nearest")
+    ax[2].imshow(np.squeeze(pred)*255, interpolation="nearest", cmap = "RdBu_r")
     ax[2].set_title("Prediction")
     ax[2].set_axis_off()
 

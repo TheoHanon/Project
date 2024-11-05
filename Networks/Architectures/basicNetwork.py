@@ -75,16 +75,16 @@ class UNetLight(nn.Module):
 
     def forward(self, x):
         # Encoder
+    
         enc1 = self.encoder1(x)
         enc2 = self.encoder2(F.max_pool2d(enc1, kernel_size=2))
-        
         # Bottleneck
         bottleneck = self.bottleneck(F.max_pool2d(enc2, kernel_size=2))
-
+    
         # Decoder with skip connections
         dec2 = self.crop_and_concat(self.decoder2(bottleneck), enc2)
         dec1 = self.crop_and_concat(self.decoder1(dec2), enc1)
-
+    
         # Final output layer
         return self.final_conv(dec1)
 

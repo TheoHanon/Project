@@ -141,9 +141,8 @@ class Network_Class:
 
                 # Calculate average validation loss 
                 val_loss /= len(self.valDataLoader)
-                progress.remove_task(val_batch_task)
 
-    
+                progress.remove_task(val_batch_task)
                 progress.update(epoch_task, advance=1)
 
                 losses_train.append(train_loss)
@@ -154,15 +153,7 @@ class Network_Class:
                     f'Validation Loss: {val_loss:.4f}')
 
 
-        fig = plt.figure(dpi=100)
-        plt.plot(losses_train, label='train', color = "blue")
-        plt.plot(losses_val, label='val', color = "green")
-        plt.xlabel("epoch")
-        plt.ylabel("loss")
-        plt.legend(loc = "upper left", shadow = True)
-        plt.savefig(self.resultsPath + '/losses.pdf')
-        plt.show()
-
+        np.savez(self.resultsPath + '/learning_curve.npz', losses_train=losses_train, losses_val=losses_val)
     
         # Save the model weights
         wghtsPath = self.resultsPath + '/_Weights/'
@@ -182,8 +173,9 @@ class Network_Class:
         allInputs, allPreds, allGT = [], [], []
         for (images, GT, resizedImg) in self.testDataLoader:
             images      = images.to(self.device)
-            predictions = (self.model(images) > 0.5).float()
-
+        
+            predictions = self.model(images)
+            print(predictions.shape)
             images, predictions = images.to('cpu'), predictions.to('cpu')
 
             allInputs.extend(resizedImg.data.numpy())
