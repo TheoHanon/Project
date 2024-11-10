@@ -50,6 +50,39 @@ def showDataLoader(dataLoader, param):
 #     - filePath (str): path to save the image file
 # --------------------------------------------------------------------------------
 def singlePrediction(img, pred, GT, filePath): 
+    figure, ax = plt.subplots(2, 2, figsize=(10, 10))
+
+    ax[0,0].imshow(img.transpose((1, 2, 0)))
+    ax[0,0].set_title("Input")
+    ax[0,0].set_axis_off()
+
+    ax[0,1].imshow(GT, interpolation="nearest")
+    ax[0,1].set_title("GT")
+    ax[0,1].set_axis_off()
+
+    ax[1,0].imshow(np.squeeze(pred)*255, interpolation="nearest", cmap = "RdBu_r")
+    ax[1,0].set_title("Predicted Probabilities")
+    ax[1,0].set_axis_off()
+
+    ax[1,1].imshow(np.squeeze(pred > 0.5), interpolation="nearest")
+    ax[1,1].set_title("Predicted Mask")
+    ax[1,1].set_axis_off()
+
+    plt.tight_layout()
+    plt.savefig(filePath)
+    plt.close()
+
+# --------------------------------------------------------------------------------
+# DISPLAY A SINGLE IMAGE AND GT MASK WITH THE CORRESPONDING PRECICTION 
+# INPUTS: 
+#     - img (arr): a 3D numpy array containing the image (ch x depth x width)
+#     - pred (arr): a binary 2D numpy array containing the predicted mask
+#                  (depth x width)
+#     - GT (arr): a binary 2D numpy array containing the ground truth mask
+#                  (depth x width)
+#     - filePath (str): path to save the image file
+# --------------------------------------------------------------------------------
+def singlePrediction2(img, pred, GT, filePath): 
     figure, ax = plt.subplots(1, 3, figsize=(15, 5))
 
     ax[0].imshow(img.transpose((1, 2, 0)))

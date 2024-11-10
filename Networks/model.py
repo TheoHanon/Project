@@ -175,7 +175,7 @@ class Network_Class:
             images      = images.to(self.device)
         
             predictions = self.model(images)
-            print(predictions.shape)
+            # print(predictions.shape)
             images, predictions = images.to('cpu'), predictions.to('cpu')
 
             allInputs.extend(resizedImg.data.numpy())
@@ -189,5 +189,30 @@ class Network_Class:
         showPredictions(allInputs, allPreds, allGT, self.resultsPath)
 
         # Quantitative Evaluation
-        # Implement this ! 
+        thresholds = np.linspace(0,1,19)
+        TPR = np.zeros_like(thresholds)
+        FPR = np.zeros_like(thresholds)
+        Tot = 0
+        NumPos = 0
+        for (images, GT, resizedImg) in self.testDataLoader:
+            images      = images.to(self.device)
+        
+            predictions = self.model(images)
+            # print(predictions.shape)
+            images, predictions = images.to('cpu'), predictions.to('cpu')
+
+            predictions = np.squeeze(predictions.data.numpy())
+            predictions = 1 / (1 + np.exp(-predictions)) #sigmoid activation
+            GT = GT.data.numpy()
+            Tot += GT.size
+            NumPos += np.sum(GT)
+            
+            for (i,t) in enumerate(thresholds):
+                mask = predictions > t
+                TPR[i] += np.sum((mask == 1) & (GT == 1))
+                FPR[i] += np.sum(mask > GT)
+        
+        TPR /= NumPos
+        FPR /= Tot - NumPos
+        np.savez(self.resultsPath + '/ROC_curve.npz', TPR=TPR, FPR=FPR)
 
