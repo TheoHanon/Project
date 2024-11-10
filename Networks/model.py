@@ -82,7 +82,7 @@ class Network_Class:
     # LOAD PRETRAINED WEIGHTS (to run evaluation without retraining the model...)
     # ---------------------------------------------------------------------------
     def loadWeights(self): 
-        self.model.load_state_dict(torch.load(self.resultsPath + '/_Weights/wghts.pkl'))
+        self.model.load_state_dict(torch.load(self.resultsPath + '/_Weights/wghts.pkl', weights_only = True))
 
     # -----------------------------------
     # TRAINING LOOP (fool implementation)
@@ -116,8 +116,8 @@ class Network_Class:
 
                     # Update the batch progress bar
                     progress.update(batch_task, advance=1)
-                    break
-    
+                
+            
                 train_loss /= len(self.trainDataLoader)
                 progress.remove_task(batch_task)
 
@@ -137,7 +137,7 @@ class Network_Class:
 
    
                         progress.update(val_batch_task, advance=1)
-                        break
+
 
                 # Calculate average validation loss 
                 val_loss /= len(self.valDataLoader)
@@ -202,7 +202,7 @@ class Network_Class:
             images, predictions = images.to('cpu'), predictions.to('cpu')
 
             predictions = np.squeeze(predictions.data.numpy())
-            predictions = 1 / (1 + np.exp(-predictions)) #sigmoid activation
+            predictions = 1 / (1 + np.exp(-predictions))
             GT = GT.data.numpy()
             Tot += GT.size
             NumPos += np.sum(GT)
