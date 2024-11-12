@@ -1,11 +1,9 @@
 /Part I/Dataset
 /Part I/Results
 
-/Part II/Dataset
+/Part II/Dataset/annotations
+/Part II/Dataset/images
 /Part II/Results
-
-**/annotations/
-
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

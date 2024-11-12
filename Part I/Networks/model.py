@@ -67,6 +67,7 @@ class Network_Class:
         # -------------------
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.1, patience=5, verbose=True)
 
         # ----------------------------------------------------
         # DATASET INITIALISATION (from the dataLoader.py file)
@@ -142,6 +143,7 @@ class Network_Class:
 
                 # Calculate average validation loss 
                 val_loss /= len(self.valDataLoader)
+                self.scheduler.step(val_loss)
 
                 progress.remove_task(val_batch_task)
                 progress.update(epoch_task, advance=1)
@@ -152,6 +154,8 @@ class Network_Class:
                 print(f'Epoch {epoch+1}/{self.epoch}, '
                     f'Train Loss: {train_loss:.4f}, '
                     f'Validation Loss: {val_loss:.4f}')
+                
+
 
 
         np.savez(self.resultsPath + '/learning_curve.npz', losses_train=losses_train, losses_val=losses_val)
