@@ -1,8 +1,10 @@
-PartI/Dataset/.
-PartI/Results/.
+/Part I/Dataset
+/Part I/Results
 
-PartII/Dataset/.
-PartII/Results/.
+/Part II/Dataset
+/Part II/Results
+
+**/annotations/
 
 
 # Byte-compiled / optimized / DLL files
