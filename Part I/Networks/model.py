@@ -191,9 +191,11 @@ class Network_Class:
         showPredictions(allInputs, allPreds, allGT, self.resultsPath)
 
         # Quantitative Evaluation
-        thresholds = np.linspace(0,1,19)
-        TPR = np.zeros_like(thresholds)
-        FPR = np.zeros_like(thresholds)
+        thresholds = np.linspace(0,1,15)
+        TP = np.zeros_like(thresholds)
+        FP = np.zeros_like(thresholds)
+        FN = np.zeros_like(thresholds)
+        TN = np.empty_like(thresholds)
         Tot = 0
         NumPos = 0
         for (images, GT, resizedImg) in self.testDataLoader:
@@ -211,10 +213,19 @@ class Network_Class:
             
             for (i,t) in enumerate(thresholds):
                 mask = predictions > t
-                TPR[i] += np.sum((mask == 1) & (GT == 1))
-                FPR[i] += np.sum(mask > GT)
+                TP[i] += np.sum((mask == 1) & (GT == 1))
+                FP[i] += np.sum(mask > GT)
+                FN[i] += np.sum(mask < GT)
         
-        TPR /= NumPos
-        FPR /= Tot - NumPos
-        np.savez(self.resultsPath + '/ROC_curve.npz', TPR=TPR, FPR=FPR)
+        for i in range(len(thresholds)):
+            TN[i] = Tot - TP[i] - FP[i] - FN[i]
+        NumNeg = Tot - NumPos
 
+        TPR = TP/NumPos
+        FPR = FP/NumNeg
+        Precision = TP/(TP+FP)
+        Recall = TPR
+        Accuracy = (TP+TN)/Tot
+        F1 = 2*TP/(2*TP+FP+FN)
+        IoU = TP/(TP+FP+FN)
+        np.savez(self.resultsPath + '/Metrics.npz', TPR=TPR, FPR=FPR, Precision=Precision, Recall=Recall, Accuracy=Accuracy, F1=F1, IoU=IoU)
