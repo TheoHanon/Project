@@ -38,10 +38,9 @@ class UNetLight(nn.Module):
         self.encoder2 = self.encoder_block(self.n_channels, self.n_channels * 2)
 
         self.bottleneck = self.encoder_block(self.n_channels * 2, self.n_channels * 4)
-
-        self.dropout2 = nn.Dropout2d(p=0.25)
+        self.dropout2 = nn.Dropout2d(p=0.2)
         self.decoder2 = self.decoder_block(self.n_channels * 4 , self.n_channels * 2)
-        self.dropout1 = nn.Dropout2d(p=0.25)
+        self.dropout1 = nn.Dropout2d(p=0.2)
         self.decoder1 = self.decoder_block(2*self.n_channels * 2 , self.n_channels)
 
         self.final_conv = nn.Conv2d(2*self.n_channels, 1, kernel_size=1)
