@@ -56,6 +56,7 @@ class Network_Class:
         self.device        = param["TRAINING"]["DEVICE"]
         self.lr            = param["TRAINING"]["LEARNING_RATE"]
         self.batchSize     = param["TRAINING"]["BATCH_SIZE"]
+        self.patience      = param["TRAINING"]["PATIENCE"]
 
         # -----------------------------------
         # NETWORK ARCHITECTURE INITIALISATION
@@ -67,7 +68,7 @@ class Network_Class:
         # -------------------
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
-        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.1, patience=3)
+        self.scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.1, patience=2)
 
         # ----------------------------------------------------
         # DATASET INITIALISATION (from the dataLoader.py file)
@@ -90,6 +91,10 @@ class Network_Class:
     # TRAINING LOOP (fool implementation)
     # -----------------------------------
     def train(self):
+        
+        best_val_loss = np.inf
+        epochs_no_improve = 0
+        early_stop = False
 
         losses_train = []
         losses_val   = []
@@ -153,6 +158,18 @@ class Network_Class:
                     f'Train Loss: {train_loss:.4f}, '
                     f'Validation Loss: {val_loss:.4f},'
                     f"lr: {self.scheduler.get_last_lr()}")
+                
+
+                # Early stopping check
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    epochs_no_improve = 0  # Reset counter if we see improvement
+                else:
+                    epochs_no_improve += 1
+
+                if epochs_no_improve == self.patience:
+                    print(f"Early stopping at epoch {epoch+1}")
+                    break
                 
 
         np.savez(self.resultsPath + '/learning_curve.npz', losses_train=losses_train, losses_val=losses_val)

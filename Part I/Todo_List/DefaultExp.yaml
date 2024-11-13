@@ -7,13 +7,13 @@ MODEL:
   # A parameter to control model complexity 
   # (i.e. number of trainable parameters)
   NB_CHANNEL: 32
+  
   # Do not hesitate to add other parameters...
   
 TRAINING: 
   LEARNING_RATE: 0.01
   EPOCH: 25
   BATCH_SIZE: 16
-  # cpu (to run on cpu) or cuda (to run on gpu)
+  PATIENCE : 4
   DEVICE: cpu 
-  # Do not hesitate to add other parameters...
-
+  
