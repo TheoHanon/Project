@@ -10,8 +10,8 @@ MODEL:
   # Do not hesitate to add other parameters...
   
 TRAINING: 
-  LEARNING_RATE: 0.001
-  EPOCH: 50
+  LEARNING_RATE: 0.01
+  EPOCH: 25
   BATCH_SIZE: 16
   # cpu (to run on cpu) or cuda (to run on gpu)
   DEVICE: cpu 

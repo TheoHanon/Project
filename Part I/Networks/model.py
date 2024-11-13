@@ -136,10 +136,8 @@ class Network_Class:
                         outputs = self.model(images).squeeze(1)
                         loss = self.criterion(outputs, GT)
                         val_loss += loss.item()
-
    
                         progress.update(val_batch_task, advance=1)
-
 
                 # Calculate average validation loss 
                 val_loss /= len(self.valDataLoader)
@@ -153,10 +151,9 @@ class Network_Class:
                 # Print summary for the epoch
                 print(f'Epoch {epoch+1}/{self.epoch}, '
                     f'Train Loss: {train_loss:.4f}, '
-                    f'Validation Loss: {val_loss:.4f}')
+                    f'Validation Loss: {val_loss:.4f},'
+                    f"lr: {self.scheduler.get_last_lr()}")
                 
-
-
 
         np.savez(self.resultsPath + '/learning_curve.npz', losses_train=losses_train, losses_val=losses_val)
     
