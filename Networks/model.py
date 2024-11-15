@@ -1,7 +1,6 @@
 from Dataset.dataLoader import *
 from Dataset.makeGraph import *
 from Networks.Architectures.basicNetwork import *
-import albumentations as A
 
 import numpy as np
 np.random.seed(2885)
@@ -56,7 +55,6 @@ class Network_Class:
         self.device        = param["TRAINING"]["DEVICE"]
         self.lr            = param["TRAINING"]["LEARNING_RATE"]
         self.batchSize     = param["TRAINING"]["BATCH_SIZE"]
-        self.patience      = param["TRAINING"]["PATIENCE"]
 
         # -----------------------------------
         # NETWORK ARCHITECTURE INITIALISATION
@@ -68,7 +66,6 @@ class Network_Class:
         # -------------------
         self.criterion = torch.nn.BCEWithLogitsLoss()
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=5, gamma=0.3)
 
         # ----------------------------------------------------
         # DATASET INITIALISATION (from the dataLoader.py file)
@@ -91,9 +88,6 @@ class Network_Class:
     # TRAINING LOOP (fool implementation)
     # -----------------------------------
     def train(self):
-        
-        best_val_loss = np.inf
-        epochs_no_improve = 0
 
         losses_train = []
         losses_val   = []
@@ -140,12 +134,13 @@ class Network_Class:
                         outputs = self.model(images).squeeze(1)
                         loss = self.criterion(outputs, GT)
                         val_loss += loss.item()
+
    
                         progress.update(val_batch_task, advance=1)
 
+
                 # Calculate average validation loss 
                 val_loss /= len(self.valDataLoader)
-                self.scheduler.step()
 
                 progress.remove_task(val_batch_task)
                 progress.update(epoch_task, advance=1)
@@ -155,21 +150,8 @@ class Network_Class:
                 # Print summary for the epoch
                 print(f'Epoch {epoch+1}/{self.epoch}, '
                     f'Train Loss: {train_loss:.4f}, '
-                    f'Validation Loss: {val_loss:.4f},'
-                    f"lr: {self.scheduler.get_last_lr()}")
-                
+                    f'Validation Loss: {val_loss:.4f}')
 
-                # Early stopping check
-                if val_loss < best_val_loss:
-                    best_val_loss = val_loss
-                    epochs_no_improve = 0  # Reset counter if we see improvement
-                else:
-                    epochs_no_improve += 1
-
-                if epochs_no_improve == self.patience:
-                    print(f"Early stopping at epoch {epoch+1}")
-                    break
-                
 
         np.savez(self.resultsPath + '/learning_curve.npz', losses_train=losses_train, losses_val=losses_val)
     
@@ -207,7 +189,7 @@ class Network_Class:
         showPredictions(allInputs, allPreds, allGT, self.resultsPath)
 
         # Quantitative Evaluation
-        thresholds = np.linspace(0,1,19)
+        thresholds = np.linspace(0,1,15)
         TP = np.zeros_like(thresholds)
         FP = np.zeros_like(thresholds)
         FN = np.zeros_like(thresholds)
@@ -244,5 +226,5 @@ class Network_Class:
         Accuracy = (TP+TN)/Tot
         F1 = 2*TP/(2*TP+FP+FN)
         IoU = TP/(TP+FP+FN)
-        Precision[-1] = 1
         np.savez(self.resultsPath + '/Metrics.npz', TPR=TPR, FPR=FPR, Precision=Precision, Recall=Recall, Accuracy=Accuracy, F1=F1, IoU=IoU)
+
