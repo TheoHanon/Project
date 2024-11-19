@@ -1,3 +1,7 @@
+# Plot 10 augmented images
+import matplotlib.pyplot as plt
+
+
 from Dataset.dataLoader import *
 from Dataset.makeGraph import *
 from Networks.Architectures.basicNetwork import *
@@ -62,11 +66,12 @@ class Network_Class:
 
 
         self.transforms = A.ReplayCompose([
-            A.Rotate(limit=(-35, 35), p=0.5),
-            # A.Affine(rotate=(-35, 35), translate_px = (-10, 10), shear = (-5, 5), scale = (0.9, 1.0), p=0.5),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5), 
-            A.ToGray(p=0.5),
+            A.Rotate(limit=(-35, 35), p=0.7),
+            A.HorizontalFlip(p=0.7),
+            A.VerticalFlip(p=0.7), 
+            A.ToGray(p=0.3),
+            A.RandomBrightnessContrast(p=0.3),
+            A.Blur(blur_limit=7, p=0.3),
         ], additional_targets={'mask': 'mask'})
 
     
@@ -107,7 +112,6 @@ class Network_Class:
         :param image: Input image (C, H, W)
         :param T: Number of augmentations to perform
         """
-
         image = np.transpose(image, (1, 2, 0))  # Convert to (H, W, C) for albumentations
         # Store transformed images and masks
         augmented_images = []
@@ -127,6 +131,15 @@ class Network_Class:
 
             predicted_masks.append(mask_pred)
 
+        # fig, axes = plt.subplots(1, 5, figsize=(20, 8))
+
+        # for i, ax in enumerate(axes.flat):
+        #     im = np.transpose(augmented_images[i].numpy(), (1, 2, 0))
+        #     im = (im - im.min()) / (im.max() - im.min()) 
+        #     ax.imshow(im)
+        #     ax.axis('off')
+        # plt.show()
+
         return predicted_masks, replay_data_list
 
 
@@ -142,18 +155,20 @@ class Network_Class:
         self.model.eval()
         
 
-        allInputs, allGT, allEntropies = [], [], []
+        allInputs, allGT, allEntropies, allPred = [], [], [], []
         for (images, GTs, resizedImg) in self.testDataLoader:
             images      = images.to(self.device)
 
             for image in images:
                 
+                predIm = torch.sigmoid(self.model(image.unsqueeze(0)).squeeze()).detach().numpy()
                 predicted_masks, replay_data_list = self.augment_and_predict(image.data.numpy(), T)
    
                 inverted_masks = [self.inverse_transform(mask, replay_data) for mask, replay_data in zip(predicted_masks, replay_data_list)]
                 entropy_map = self.compute_entropy(inverted_masks)
 
                 allEntropies.append(entropy_map)
+                allPred.append(predIm)
 
             allInputs.extend(resizedImg.data.numpy())
             allGT.extend(GTs.data.numpy())
@@ -161,8 +176,9 @@ class Network_Class:
         allInputs = np.array(allInputs)
         allGT     = np.array(allGT)
         allEntropies = np.array(allEntropies).squeeze()
+        allPred = np.array(allPred).squeeze()
 
-        showPredictions(allInputs, allEntropies, allGT, self.resultsPath)
+        showPredictions(allInputs, allEntropies, allGT, allPred, self.resultsPath)
 
 
 

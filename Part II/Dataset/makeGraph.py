@@ -49,7 +49,7 @@ def showDataLoader(dataLoader, param):
 #                  (depth x width)
 #     - filePath (str): path to save the image file
 # --------------------------------------------------------------------------------
-def singlePrediction(img, pred, GT, filePath): 
+def singlePrediction(img, entropy, GT, pred, filePath): 
     figure, ax = plt.subplots(2, 2, figsize=(10, 10))
 
     ax[0,0].imshow(img.transpose((1, 2, 0)))
@@ -60,11 +60,11 @@ def singlePrediction(img, pred, GT, filePath):
     ax[0,1].set_title("GT")
     ax[0,1].set_axis_off()
 
-    ax[1,0].imshow(np.squeeze(pred)*255, interpolation="nearest", cmap = "RdBu_r")
-    ax[1,0].set_title("Predicted Probabilities")
+    ax[1,0].imshow(entropy, interpolation="nearest", cmap = "viridis")
+    ax[1,0].set_title("Entropy")
     ax[1,0].set_axis_off()
 
-    ax[1,1].imshow(np.squeeze(pred > 0.5), interpolation="nearest")
+    ax[1,1].imshow((pred > 0.5), interpolation="nearest")
     ax[1,1].set_title("Predicted Mask")
     ax[1,1].set_axis_off()
 
@@ -80,12 +80,12 @@ def singlePrediction(img, pred, GT, filePath):
 #     - allGT (list): list of 2D numpy arrays containing the ground truth masks 
 #     - resultPath (str): path to folder in which to save the image files
 # --------------------------------------------------------------------------------
-def showPredictions(allInputs, allPreds, allGT, resultPath):
+def showPredictions(allInputs, allEntropy, allGT, allPred, resultPath):
     idx = 0
-    for (img, pred, GT) in zip(allInputs, allPreds, allGT): 
+    for (img, entropy, GT, pred) in zip(allInputs, allEntropy, allGT, allPred): 
         filePath = os.path.join(resultPath, "Test", str(idx))
         createFolder(os.path.join(resultPath, "Test"))
-        singlePrediction(img, pred, GT, filePath)
+        singlePrediction(img, entropy, GT, pred, filePath)
         if idx > 30: 
             break
         idx += 1
