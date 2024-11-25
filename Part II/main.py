@@ -48,7 +48,7 @@ def main(parser):
     # 2. EVALUATE THE MODEL  
     # ---------------------  
     myNetwork.loadWeights()
-    myNetwork.evaluate()
+    myNetwork.evaluate(T = 15)
     
 
 if __name__ == '__main__':

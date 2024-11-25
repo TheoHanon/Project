@@ -102,6 +102,7 @@ class Network_Class:
                 
             elif 'VerticalFlip' in transform_name and t['applied']:
                 transformed_mask = A.Compose([A.VerticalFlip(p=1)])(image=transformed_mask)['image']
+
         transformed_mask = torch.tensor(np.transpose(transformed_mask, (2, 0, 1)))
 
         return transformed_mask
@@ -144,11 +145,21 @@ class Network_Class:
 
 
     def compute_entropy(self, masks):
+
+        T = len(masks)
         # Stack along the new dimension to get shape [T, H, W] for pixel-wise computation
-        stacked_masks = torch.stack(masks, dim=0)
-        probs = torch.sigmoid(stacked_masks)  # Apply softmax if model outputs logits
-        entropy_map = entropy(probs.cpu().numpy(), axis=0)
-        return torch.tensor(entropy_map)
+        stacked_logit = torch.stack(masks, dim=0).squeeze(1)
+        stacked_masks = (torch.sigmoid(stacked_logit) > 0.5).int()  # Apply softmax if model outputs logits
+        pixel_probs = torch.zeros((stacked_masks.shape[1], stacked_masks.shape[2], 2))
+        
+        for t in range(stacked_masks.shape[0]):
+            for c in range(2): # 2 classes
+                pixel_probs[..., c] += (stacked_masks[t] == c).float()
+       
+        pixel_probs /= T
+        entropy_map = entropy(pixel_probs, axis=-1)
+
+        return torch.tensor(entropy_map).unsqueeze(0)
 
     def evaluate(self, T = 5):
         self.model.train(False)

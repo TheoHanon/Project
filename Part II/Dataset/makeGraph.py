@@ -2,6 +2,8 @@ from matplotlib import pyplot as plt
 import numpy as np
 import cv2
 import os
+from matplotlib.colors import BoundaryNorm
+
 
 
 # --------------------------------------------------------------------------------
@@ -50,6 +52,11 @@ def showDataLoader(dataLoader, param):
 #     - filePath (str): path to save the image file
 # --------------------------------------------------------------------------------
 def singlePrediction(img, entropy, GT, pred, filePath): 
+
+    # num_levels = 20  # Number of levels in the colormap
+    # boundaries = np.linspace(0, 1, num_levels + 1)  # Levels from 0 to 1
+    # norm = BoundaryNorm(boundaries, ncolors=256)
+
     figure, ax = plt.subplots(2, 2, figsize=(10, 10))
 
     ax[0,0].imshow(img.transpose((1, 2, 0)))
@@ -60,7 +67,7 @@ def singlePrediction(img, entropy, GT, pred, filePath):
     ax[0,1].set_title("GT")
     ax[0,1].set_axis_off()
 
-    ax[1,0].imshow(entropy, interpolation="nearest", cmap = "viridis")
+    ax[1,0].imshow(entropy, interpolation="nearest", cmap = "winter")
     ax[1,0].set_title("Entropy")
     ax[1,0].set_axis_off()
 
