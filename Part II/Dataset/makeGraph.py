@@ -87,7 +87,7 @@ def singlePrediction(img, entropy, GT, pred, filePath):
 
     # Tighten layout and adjust borders
     plt.tight_layout(rect=[0, 0.1, 1, 0.95])  # Adjust rect for bottom space
-    plt.savefig(filePath, bbox_inches='tight')  # Ensure no extra whitespace
+    plt.savefig(filePath, bbox_inches='tight', dpi = 300)  # Ensure no extra whitespace
     plt.close()
 
     
