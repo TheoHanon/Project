@@ -192,8 +192,7 @@ class Network_Class:
         for (images, GT, resizedImg) in self.testDataLoader:
             images      = images.to(self.device)
         
-            predictions = self.model(images)
-            # print(predictions.shape)
+            predictions = torch.sigmoid(self.model(images))            
             images, predictions = images.to('cpu'), predictions.to('cpu')
 
             allInputs.extend(resizedImg.data.numpy())

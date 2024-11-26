@@ -53,31 +53,44 @@ def showDataLoader(dataLoader, param):
 # --------------------------------------------------------------------------------
 def singlePrediction(img, entropy, GT, pred, filePath): 
 
-    # num_levels = 20  # Number of levels in the colormap
-    # boundaries = np.linspace(0, 1, num_levels + 1)  # Levels from 0 to 1
-    # norm = BoundaryNorm(boundaries, ncolors=256)
+    figure = plt.figure(figsize=(10, 10))
+    gridspec = figure.add_gridspec(2, 2, wspace=0.02, hspace=0.2)  # Increase vertical spacing slightly
 
-    figure, ax = plt.subplots(2, 2, figsize=(10, 10))
+    # Input image
+    ax1 = figure.add_subplot(gridspec[0, 0])
+    ax1.imshow(img.transpose((1, 2, 0)))
+    ax1.set_title("Input", fontweight="bold", fontsize=16, pad=15)  # Increased padding
+    ax1.set_axis_off()
 
-    ax[0,0].imshow(img.transpose((1, 2, 0)))
-    ax[0,0].set_title("Input")
-    ax[0,0].set_axis_off()
+    # Ground truth
+    ax2 = figure.add_subplot(gridspec[0, 1])
+    ax2.imshow(GT, interpolation="nearest")
+    ax2.set_title("GT", fontweight="bold", fontsize=16, pad=15)
+    ax2.set_axis_off()
 
-    ax[0,1].imshow(GT, interpolation="nearest")
-    ax[0,1].set_title("GT")
-    ax[0,1].set_axis_off()
+    # Predicted probabilities
+    ax3 = figure.add_subplot(gridspec[1, 0])
+    im = ax3.imshow(entropy, interpolation="nearest", cmap="winter", vmin=0, vmax=1)
+    ax3.set_title("Predicted Probabilities", fontweight="bold", fontsize=16, pad=20)  # More padding for bottom row
+    ax3.set_axis_off()
 
-    ax[1,0].imshow(entropy, interpolation="nearest", cmap = "winter")
-    ax[1,0].set_title("Entropy")
-    ax[1,0].set_axis_off()
+    # Predicted mask
+    ax4 = figure.add_subplot(gridspec[1, 1])
+    ax4.imshow(np.squeeze(pred > 0.5), interpolation="nearest", vmin=0, vmax=1)
+    ax4.set_title("Predicted Mask", fontweight="bold", fontsize=16, pad=20)  # More padding for bottom row
+    ax4.set_axis_off()
 
-    ax[1,1].imshow((pred > 0.5), interpolation="nearest")
-    ax[1,1].set_title("Predicted Mask")
-    ax[1,1].set_axis_off()
+    # Adding the colorbar just below the subplots
+    cbar_ax = figure.add_axes([0.21, 0.05, 0.6, 0.02])  # Position closer to subplots
+    cbar = figure.colorbar(im, cax=cbar_ax, orientation='horizontal')
+    cbar.set_label('Entropy', fontsize=14)
 
-    plt.tight_layout()
-    plt.savefig(filePath)
+    # Tighten layout and adjust borders
+    plt.tight_layout(rect=[0, 0.1, 1, 0.95])  # Adjust rect for bottom space
+    plt.savefig(filePath, bbox_inches='tight')  # Ensure no extra whitespace
     plt.close()
+
+    
 
 # --------------------------------------------------------------------------------
 # DISPLAY ALL IMAGES AND PREDICTIONS
