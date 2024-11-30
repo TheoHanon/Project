@@ -1,0 +1,3 @@
+LELEC2885 - Image Processing and Computer Vision : Project in Image Segmentation
+
+This project is divided in two parts. Part II treats with the estimation of the model's uncertainty. Our model has been trained on the Oxford-IIIT Pet Dataset (https://www.robots.ox.ac.uk/~vgg/data/pets/). Once the dataset is uploaded in the 'Dataset' folder, it is possible to evaluate our (trained) model's uncertainty by running the 'main.py' file. This returns our model's uncertainty for the test set, which you can visualize in the folder 'Results\DefaultExp\Test'.
